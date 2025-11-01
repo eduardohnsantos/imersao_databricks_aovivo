@@ -1,7 +1,3 @@
--- Gold Layer: mostvaluableclient
--- Agregação de métricas de negócio e segmentação de clientes por valor
--- Fonte: silver.fact_transaction_revenue
-
 CREATE OR REFRESH STREAMING TABLE gold.mostvaluableclient
 AS
 WITH transaction_data AS (
@@ -9,8 +5,7 @@ WITH transaction_data AS (
     customer_sk,
     data_hora,
     gross_value,
-    fee_revenue,
-    MAX(data_hora) OVER () AS max_data_hora_global
+    fee_revenue
   FROM STREAM(silver.fact_transaction_revenue)
 ),
 metrics AS (
@@ -21,10 +16,13 @@ metrics AS (
     AVG(gross_value) AS ticket_medio,
     MIN(data_hora) AS primeira_transacao,
     MAX(data_hora) AS ultima_transacao,
-    COUNT(CASE 
-      WHEN data_hora >= max_data_hora_global - INTERVAL 30 DAYS 
-      THEN 1 
-    END) AS transacoes_ultimos_30_dias,
+    SUM(
+      CASE 
+        WHEN data_hora >= current_timestamp() - INTERVAL 30 DAYS 
+        THEN 1 
+        ELSE 0
+      END
+    ) AS transacoes_ultimos_30_dias,
     SUM(fee_revenue) AS comissao_total
   FROM transaction_data
   GROUP BY customer_sk
@@ -62,4 +60,3 @@ SELECT
   current_timestamp() AS calculated_at
 FROM ranked_clients
 ORDER BY total_transacoes DESC;
-
