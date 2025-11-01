@@ -35,5 +35,5 @@ CREATE OR REFRESH STREAMING TABLE silver.fact_transaction_revenue(
   current_timestamp() as calculated_at
 FROM STREAM(silver.fact_transaction_assets) t
 INNER JOIN STREAM(silver.dim_clientes) c ON t.cliente_id = c.customer_id
-INNER JOIN STREAM(silver.fact_quotation_assets) q ON t.asset_symbol = q.ativo 
+INNER JOIN STREAM(silver.fact_quotation_assets) q ON t.asset_symbol = q.asset_symbol
   AND q.data_hora_aproximada = t.data_hora_aproximada

@@ -1,76 +1,49 @@
--- Silver Layer: fact_transaction_assets
--- União e transformação de transações Bitcoin e Commodities
--- Fonte: bronze.transaction_btc + bronze.transaction_commodities
-
-CREATE OR REFRESH STREAMING TABLE silver.fact_transaction_assets
-AS 
+-- ===============================
+-- SILVER: fact_transaction_assets
+-- Símbolo padronizado: BTC/GOLD/OIL/SILVER
+-- ===============================
+CREATE OR REFRESH STREAMING LIVE TABLE silver.fact_transaction_assets
+(
+  CONSTRAINT quantidade_positive     EXPECT (quantidade > 0) ON VIOLATION DROP ROW,
+  CONSTRAINT data_hora_not_null      EXPECT (data_hora IS NOT NULL) ON VIOLATION DROP ROW,
+  CONSTRAINT tipo_operacao_valid     EXPECT (tipo_operacao IN ('COMPRA','VENDA')) ON VIOLATION DROP ROW,
+  CONSTRAINT asset_symbol_valid      EXPECT (asset_symbol IN ('BTC','GOLD','OIL','SILVER')) ON VIOLATION DROP ROW
+)
+AS
 SELECT 
   transaction_id,
-  CAST(data_hora AS TIMESTAMP) as data_hora,
-  date_trunc('hour', CAST(data_hora AS TIMESTAMP)) as data_hora_aproximada,
+  CAST(data_hora AS TIMESTAMP)                                        AS data_hora,
+  date_trunc('hour', CAST(data_hora AS TIMESTAMP))                    AS data_hora_aproximada,
+
+  -- 🔁 Mapeamento unificado de símbolo
   CASE 
-    WHEN UPPER(ativo) IN ('BTC', 'BTC-USD') THEN 'BTC'
-    WHEN UPPER(ativo) IN ('GOLD', 'GC=F') THEN 'GOLD'
-    WHEN UPPER(ativo) IN ('OIL', 'CL=F') THEN 'OIL'
-    WHEN UPPER(ativo) IN ('SILVER', 'SI=F') THEN 'SILVER'
+    WHEN UPPER(COALESCE(ativo, commodity_code)) IN ('BTC','BTC-USD') THEN 'BTC'
+    WHEN UPPER(COALESCE(ativo, commodity_code)) IN ('GOLD','GC=F')   THEN 'GOLD'
+    WHEN UPPER(COALESCE(ativo, commodity_code)) IN ('OIL','CL=F')    THEN 'OIL'
+    WHEN UPPER(COALESCE(ativo, commodity_code)) IN ('SILVER','SI=F') THEN 'SILVER'
     ELSE 'UNKNOWN'
-  END as asset_symbol,
-  quantidade,
+  END                                                                 AS asset_symbol,
+
+  CAST(quantidade AS DECIMAL(18,8))                                   AS quantidade,
   tipo_operacao,
-  moeda,
+  UPPER(moeda)                                                        AS moeda,
   cliente_id,
   canal,
   mercado,
-  NULL as unidade,
   arquivo_origem,
   importado_em,
-  ingested_at
-FROM STREAM(bronze.transaction_btc)
-WHERE
-  quantidade > 0
-  AND data_hora IS NOT NULL
-  AND tipo_operacao IN ('COMPRA', 'VENDA')
-  AND CASE 
-        WHEN UPPER(ativo) IN ('BTC', 'BTC-USD') THEN 'BTC'
-        WHEN UPPER(ativo) IN ('GOLD', 'GC=F') THEN 'GOLD'
-        WHEN UPPER(ativo) IN ('OIL', 'CL=F') THEN 'OIL'
-        WHEN UPPER(ativo) IN ('SILVER', 'SI=F') THEN 'SILVER'
-        ELSE 'UNKNOWN'
-      END IN ('BTC', 'GOLD', 'OIL', 'SILVER')
+  ingested_at,
+  current_timestamp()                                                 AS processed_at
+FROM (
+  SELECT 
+    transaction_id, data_hora, ativo, NULL AS commodity_code, quantidade,
+    tipo_operacao, moeda, cliente_id, canal, mercado, arquivo_origem, importado_em, ingested_at
+  FROM STREAM(bronze.transaction_btc)
 
-UNION ALL
+  UNION ALL
 
-SELECT 
-  transaction_id,
-  CAST(data_hora AS TIMESTAMP) as data_hora,
-  date_trunc('hour', CAST(data_hora AS TIMESTAMP)) as data_hora_aproximada,
-  CASE 
-    WHEN UPPER(commodity_code) IN ('BTC', 'BTC-USD') THEN 'BTC'
-    WHEN UPPER(commodity_code) IN ('GOLD', 'GC=F') THEN 'GOLD'
-    WHEN UPPER(commodity_code) IN ('OIL', 'CL=F') THEN 'OIL'
-    WHEN UPPER(commodity_code) IN ('SILVER', 'SI=F') THEN 'SILVER'
-    ELSE 'UNKNOWN'
-  END as asset_symbol,
-  quantidade,
-  tipo_operacao,
-  moeda,
-  cliente_id,
-  canal,
-  mercado,
-  unidade,
-  arquivo_origem,
-  importado_em,
-  ingested_at
-FROM STREAM(bronze.transaction_commodities)
-WHERE
-  quantidade > 0
-  AND data_hora IS NOT NULL
-  AND tipo_operacao IN ('COMPRA', 'VENDA')
-  AND CASE 
-        WHEN UPPER(commodity_code) IN ('BTC', 'BTC-USD') THEN 'BTC'
-        WHEN UPPER(commodity_code) IN ('GOLD', 'GC=F') THEN 'GOLD'
-        WHEN UPPER(commodity_code) IN ('OIL', 'CL=F') THEN 'OIL'
-        WHEN UPPER(commodity_code) IN ('SILVER', 'SI=F') THEN 'SILVER'
-        ELSE 'UNKNOWN'
-      END IN ('BTC', 'GOLD', 'OIL', 'SILVER');
-
+  SELECT 
+    transaction_id, data_hora, NULL AS ativo, commodity_code, quantidade,
+    tipo_operacao, moeda, cliente_id, canal, mercado, arquivo_origem, importado_em, ingested_at
+  FROM STREAM(bronze.transaction_commodities)
+) combined_transactions;
