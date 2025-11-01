@@ -1,3 +1,6 @@
+-- Gold Layer: mostvaluableclient
+-- Consolidação de métricas por cliente com base nas transações e receitas
+
 CREATE OR REFRESH STREAMING TABLE gold.mostvaluableclient
 AS
 WITH transaction_data AS (
@@ -8,6 +11,7 @@ WITH transaction_data AS (
     fee_revenue
   FROM STREAM(silver.fact_transaction_revenue)
 ),
+
 metrics AS (
   SELECT 
     customer_sk,
@@ -18,7 +22,7 @@ metrics AS (
     MAX(data_hora) AS ultima_transacao,
     SUM(
       CASE 
-        WHEN data_hora >= current_timestamp() - INTERVAL 30 DAYS 
+        WHEN data_hora >= (current_timestamp() - INTERVAL 30 DAYS)
         THEN 1 
         ELSE 0
       END
@@ -27,6 +31,7 @@ metrics AS (
   FROM transaction_data
   GROUP BY customer_sk
 )
+
 SELECT 
   customer_sk,
   total_transacoes,
@@ -38,4 +43,4 @@ SELECT
   comissao_total,
   current_timestamp() AS calculated_at
 FROM metrics
-ORDER BY total_transacoes DESC
+ORDER BY valor_total DESC;
