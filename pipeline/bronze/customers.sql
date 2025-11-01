@@ -4,7 +4,6 @@
 
 -- Bronze Layer: customers
 -- Ingestão de dados brutos de clientes do volume usando cloud_files
-
 CREATE OR REFRESH STREAMING TABLE bronze.customers
 AS SELECT 
   customer_id,
