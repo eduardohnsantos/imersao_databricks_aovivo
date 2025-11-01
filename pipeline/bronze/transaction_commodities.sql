@@ -20,4 +20,4 @@ FROM cloud_files(
   "/Volumes/lakehouse_aovivo/raw/transaction_commodities",
   "csv",
   map("header", "true", "inferSchema", "true")
-)
+);

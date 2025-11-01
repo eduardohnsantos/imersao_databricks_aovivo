@@ -12,4 +12,4 @@ FROM cloud_files(
   "/Volumes/lakehouse_aovivo/raw/quotation_yfinance",
   "csv",
   map("header", "true", "inferSchema", "true")
-)
+);

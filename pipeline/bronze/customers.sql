@@ -16,5 +16,5 @@ FROM cloud_files(
   "/Volumes/lakehouse_aovivo/raw/customers",
   "csv",
   map("header", "true", "inferSchema", "true")
-)
+);
 

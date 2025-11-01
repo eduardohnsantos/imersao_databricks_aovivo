@@ -19,4 +19,4 @@ FROM cloud_files(
   "/Volumes/lakehouse_aovivo/raw/transacation_btc",
   "csv",
   map("header", "true", "inferSchema", "true")
-)
+);

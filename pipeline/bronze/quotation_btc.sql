@@ -12,5 +12,5 @@ FROM cloud_files(
   "/Volumes/lakehouse_aovivo/raw/quotation_btc",
   "csv",
   map("header", "true", "inferSchema", "true")
-)
+);
 
