@@ -7,8 +7,6 @@ WITH transaction_data AS (
     gross_value,
     fee_revenue
   FROM STREAM(silver.fact_transaction_revenue)
-  -- Adiciona watermark para permitir agregações
-  WITH WATERMARK ON data_hora INTERVAL 10 MINUTES
 ),
 
 metrics AS (
