@@ -26,25 +26,6 @@ metrics AS (
     SUM(fee_revenue) AS comissao_total
   FROM transaction_data
   GROUP BY customer_sk
-),
-ranked_clients AS (
-  SELECT 
-    customer_sk,
-    total_transacoes,
-    valor_total,
-    ticket_medio,
-    primeira_transacao,
-    ultima_transacao,
-    COALESCE(transacoes_ultimos_30_dias, 0) AS transacoes_ultimos_30_dias,
-    comissao_total,
-    RANK() OVER (ORDER BY total_transacoes DESC) AS ranking_por_transacoes,
-    CASE 
-      WHEN RANK() OVER (ORDER BY total_transacoes DESC) = 1 THEN 'Top 1'
-      WHEN RANK() OVER (ORDER BY total_transacoes DESC) = 2 THEN 'Top 2'
-      WHEN RANK() OVER (ORDER BY total_transacoes DESC) = 3 THEN 'Top 3'
-      ELSE 'Outros'
-    END AS classificacao_cliente
-  FROM metrics
 )
 SELECT 
   customer_sk,
@@ -53,10 +34,8 @@ SELECT
   ticket_medio,
   primeira_transacao,
   ultima_transacao,
-  transacoes_ultimos_30_dias,
+  COALESCE(transacoes_ultimos_30_dias, 0) AS transacoes_ultimos_30_dias,
   comissao_total,
-  ranking_por_transacoes,
-  classificacao_cliente,
   current_timestamp() AS calculated_at
-FROM ranked_clients
-ORDER BY total_transacoes DESC;
+FROM metrics
+ORDER BY total_transacoes DESC
