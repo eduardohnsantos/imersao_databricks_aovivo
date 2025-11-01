@@ -1,19 +1,20 @@
--- Bronze Layer: Customers Table
--- Ingestão de dados de clientes a partir de volumes CSV
--- Fonte: /Volumes/lakehouse/raw_public/customers
+-- Bronze Layer: customers
+-- Ingestão de dados brutos de clientes do volume usando cloud_files
 
 CREATE OR REFRESH STREAMING TABLE bronze.customers
-COMMENT "Tabela Bronze para ingestão de dados de clientes"
-AS
-SELECT
-  *,
-  current_timestamp() AS ingested_at
+AS SELECT 
+  customer_id,
+  customer_name,
+  documento,
+  segmento,
+  pais,
+  estado,
+  cidade,
+  created_at,
+  current_timestamp() as ingested_at
 FROM cloud_files(
   "/Volumes/lakehouse/raw_public/customers",
   "csv",
-  map(
-    "header", "true",
-    "inferSchema", "true"
-  )
-);
+  map("header", "true", "inferSchema", "true")
+)
 

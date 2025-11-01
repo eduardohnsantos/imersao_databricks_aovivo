@@ -1,19 +1,22 @@
--- Bronze Layer: Transaction BTC Table
--- Ingestão de transações Bitcoin a partir de volumes CSV
--- Fonte: /Volumes/lakehouse/raw_public/transacation_btc
+-- Bronze Layer: transaction_btc
+-- Ingestão de dados brutos de transações Bitcoin do volume usando cloud_files
 
 CREATE OR REFRESH STREAMING TABLE bronze.transaction_btc
-COMMENT "Tabela Bronze para ingestão de transações Bitcoin"
-AS
-SELECT
-  *,
-  current_timestamp() AS ingested_at
+AS SELECT 
+  transaction_id,
+  data_hora,
+  ativo,
+  quantidade,
+  tipo_operacao,
+  moeda,
+  cliente_id,
+  canal,
+  mercado,
+  arquivo_origem,
+  importado_em,
+  current_timestamp() as ingested_at
 FROM cloud_files(
   "/Volumes/lakehouse/raw_public/transacation_btc",
   "csv",
-  map(
-    "header", "true",
-    "inferSchema", "true"
-  )
-);
-
+  map("header", "true", "inferSchema", "true")
+)

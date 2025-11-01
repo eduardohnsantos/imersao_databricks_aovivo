@@ -1,19 +1,23 @@
--- Bronze Layer: Transaction Commodities Table
--- Ingestão de transações de commodities a partir de volumes CSV
--- Fonte: /Volumes/lakehouse/raw_public/transaction_commodities
+-- Bronze Layer: transaction_commodities
+-- Ingestão de dados brutos de transações de commodities do volume usando cloud_files
 
 CREATE OR REFRESH STREAMING TABLE bronze.transaction_commodities
-COMMENT "Tabela Bronze para ingestão de transações de commodities"
-AS
-SELECT
-  *,
-  current_timestamp() AS ingested_at
+AS SELECT 
+  transaction_id,
+  data_hora,
+  commodity_code,
+  quantidade,
+  tipo_operacao,
+  unidade,
+  moeda,
+  cliente_id,
+  canal,
+  mercado,
+  arquivo_origem,
+  importado_em,
+  current_timestamp() as ingested_at
 FROM cloud_files(
-  "/Volumes/lakehouse/raw_public/transaction_commodities",
+  "/Volumes/lakehouse/raw_public/transacation_commodities",
   "csv",
-  map(
-    "header", "true",
-    "inferSchema", "true"
-  )
-);
-
+  map("header", "true", "inferSchema", "true")
+)
