@@ -1,3 +1,7 @@
+-- Bronze Layer: Customers Table
+-- Ingestão de dados de clientes a partir de volumes CSV
+-- Fonte: /Volumes/lakehouse/raw_public/customers
+
 -- Bronze Layer: customers
 -- Ingestão de dados brutos de clientes do volume usando cloud_files
 
@@ -13,8 +17,7 @@ AS SELECT
   created_at,
   current_timestamp() as ingested_at
 FROM cloud_files(
-  "/Volumes/lakehouse_aovivo/raw/customers",
+  "/Volumes/lakehouse/raw_public/customers",
   "csv",
   map("header", "true", "inferSchema", "true")
-);
-
+)
