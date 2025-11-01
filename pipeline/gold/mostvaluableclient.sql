@@ -1,4 +1,4 @@
-CREATE OR REFRESH STREAMING TABLE gold.mostvaluableclient
+CREATE OR REFRESH STREAMING TABLE lakehouse_aovivo.gold.mostvaluableclient
 AS
 SELECT
   customer_sk,
