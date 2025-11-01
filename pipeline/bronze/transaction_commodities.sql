@@ -17,7 +17,7 @@ AS SELECT
   importado_em,
   current_timestamp() as ingested_at
 FROM cloud_files(
-  "/Volumes/lakehouse_aovivo/raw/transacation_commodities",
+  "/Volumes/lakehouse_aovivo/raw/transaction_commodities",
   "csv",
   map("header", "true", "inferSchema", "true")
 )
