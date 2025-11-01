@@ -7,13 +7,8 @@ WITH transaction_data AS (
     gross_value,
     fee_revenue
   FROM STREAM(silver.fact_transaction_revenue)
-),
-
-recent_transactions AS (
-  SELECT 
-    customer_sk
-  FROM transaction_data
-  WHERE data_hora >= (current_timestamp() - INTERVAL 30 DAYS)
+  -- Adiciona watermark para permitir agregações
+  WITH WATERMARK ON data_hora INTERVAL 10 MINUTES
 ),
 
 metrics AS (
@@ -33,7 +28,8 @@ transacoes_ultimos_30_dias AS (
   SELECT 
     customer_sk,
     COUNT(*) AS transacoes_ultimos_30_dias
-  FROM recent_transactions
+  FROM transaction_data
+  WHERE data_hora >= current_timestamp() - INTERVAL 30 DAYS
   GROUP BY customer_sk
 )
 
