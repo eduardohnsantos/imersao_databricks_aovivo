@@ -1,6 +1,3 @@
--- Gold Layer: mostvaluableclient
--- Consolidação de métricas por cliente com base nas transações e receitas
-
 CREATE OR REFRESH STREAMING TABLE gold.mostvaluableclient
 AS
 WITH transaction_data AS (
@@ -43,4 +40,3 @@ SELECT
   comissao_total,
   current_timestamp() AS calculated_at
 FROM metrics
-ORDER BY valor_total DESC;
